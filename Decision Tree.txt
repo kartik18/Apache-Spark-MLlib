@@ -42,7 +42,8 @@ SparkSession available as 'spark'.
 ...                      StructField("number_customer_service_calls", DoubleType(), True),
 ...                      StructField("churned", StringType(), True)])
 
->>> df = sqlContext.read.format('com.databricks.spark.csv').load('/root/ds>>> df = sqlContext.read.format('com.databricks.spark.csv').load('hdfs://ambari-reborn-1.c.ambari-reborn.internal:8020/user/root/churn.all', schema = schema)
+>>> df = sqlContext.read.format('com.databricks.spark.csv').load('hdfs://ambari-reborn-1.c.ambari-reborn.internal:8020/user/root/churn.all', schema = schema)
+
 17/11/26 08:39:23 WARN FileStreamSink: Error while looking for metadata directory.
 
 >>> df.take(5)
