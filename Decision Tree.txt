@@ -1,0 +1,89 @@
+Python 2.7.5 (default, Aug  4 2017, 00:39:18) 
+[GCC 4.8.5 20150623 (Red Hat 4.8.5-16)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /__ / .__/\_,_/_/ /_/\_\   version 2.2.0.2.6.3.0-235
+      /_/
+
+Using Python version 2.7.5 (default, Aug  4 2017 00:39:18)
+SparkSession available as 'spark'.
+>>> from pyspark.sql import SQLContext
+
+>>> from pyspark.sql.types import *
+
+>>> from pyspark import SparkContext
+
+>>> sqlContext = SQLContext(sc)
+
+>>> schema = StructType([StructField("state", StringType(), True),
+...                      StructField("account_length", DoubleType(), True),
+...                      StructField("area_code", StringType(), True),
+...                      StructField("phone_number", StringType(), True),
+...                      StructField("international_plan", StringType(), True),
+...                      StructField("voice_mail_plan", StringType(), True),
+...                      StructField("number_vmail_messages", DoubleType(), True),
+...                      StructField("total_day_minutes", DoubleType(), True),
+...                      StructField("total_day_calls", DoubleType(), True),
+...                      StructField("total_day_charge", DoubleType(), True),
+...                      StructField("total_eve_minutes", DoubleType(), True),
+...                      StructField("total_eve_calls", DoubleType(), True),
+...                      StructField("total_eve_charge", DoubleType(), True),
+...                      StructField("total_night_minutes", DoubleType(), True),
+...                      StructField("total_night_calls", DoubleType(), True),
+...                      StructField("total_night_charge", DoubleType(), True),
+...                      StructField("total_intl_minutes", DoubleType(), True),
+...                      StructField("total_intl_calls", DoubleType(), True),
+...                      StructField("total_intl_charge", DoubleType(), True),
+...                      StructField("number_customer_service_calls", DoubleType(), True),
+...                      StructField("churned", StringType(), True)])
+
+>>> df = sqlContext.read.format('com.databricks.spark.csv').load('/root/ds>>> df = sqlContext.read.format('com.databricks.spark.csv').load('hdfs://ambari-reborn-1.c.ambari-reborn.internal:8020/user/root/churn.all', schema = schema)
+17/11/26 08:39:23 WARN FileStreamSink: Error while looking for metadata directory.
+
+>>> df.take(5)
+[Row(state=u'KS', account_length=128.0, area_code=u' 415', phone_number=u' 382-4657', international_plan=u' no', voice_mail_plan=u' yes', number_vmail_messages=25.0, total_day_minutes=265.1, total_day_calls=110.0, total_day_charge=45.07, total_eve_minutes=197.4, total_eve_calls=99.0, total_eve_charge=16.78, total_night_minutes=244.7, total_night_calls=91.0, total_night_charge=11.01, total_intl_minutes=10.0, total_intl_calls=3.0, total_intl_charge=2.7, number_customer_service_calls=1.0, churned=u' False.'), Row(state=u'OH', account_length=107.0, area_code=u' 415', phone_number=u' 371-7191', international_plan=u' no', voice_mail_plan=u' yes', number_vmail_messages=26.0, total_day_minutes=161.6, total_day_calls=123.0, total_day_charg
+   
+>>> from pyspark.mllib.linalg import Vector
+
+>>> from pyspark.ml.feature import VectorAssembler
+
+>>> assembler = VectorAssembler(
+...     inputCols = [
+...         'number_customer_service_calls', \
+...         'total_night_minutes', \
+...         'total_day_minutes', \
+...         'total_eve_minutes', \
+...         'account_length'],
+...     outputCol = 'features')
+
+>>> from pyspark.ml.feature import StringIndexer
+
+>>> label_indexer = StringIndexer(inputCol = 'churned', outputCol = 'label')
+
+>>> from pyspark.ml import Pipeline 
+ 
+ >>> from pyspark.ml.classification import DecisionTreeClassifier
+
+ >>> classifier_1 = DecisionTreeClassifier(labelCol = 'label', featuresCol = 'features')
+
+>>> pipeline_1 = Pipeline(stages= [assembler , label_indexer , classifier_1])
+
+>>> (train_1, test_1) = df.randomSplit([0.7, 0.3])
+
+>>> model_1 = pipeline_1.fit(train)
+
+>>> from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+>>> predictions_1 = model_1.transform(test_1)
+
+>>> evaluator = BinaryClassificationEvaluator()
+
+>>> decision_tree = evaluator.evaluate(predictions_1)
+
+>>> decision_tree
+0.35950986541582014
